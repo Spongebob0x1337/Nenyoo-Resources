@@ -350,13 +350,19 @@
       "id": "Interaction",
       "name": "Interaction",
       "entry": "interaction.lua",
-      "bytes": 55339,
-      "hash": "f196cfff",
+      "preview": "preview.png",
+      "bytes": 210879,
+      "hash": "f1cf4f02",
       "files": [
         {
           "path": "interaction.lua",
           "bytes": 47032,
           "hash": "2b726e95d20f12fd"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 155540,
+          "hash": "2e726dc7511bbef7"
         },
         {
           "path": "scripts/player_panel.lua",
@@ -369,13 +375,19 @@
       "id": "Kiddion",
       "name": "Kiddion",
       "entry": "kiddion.lua",
-      "bytes": 21064,
-      "hash": "0b04a617",
+      "preview": "preview.png",
+      "bytes": 177297,
+      "hash": "46518a2b",
       "files": [
         {
           "path": "kiddion.lua",
           "bytes": 21064,
           "hash": "3767a01de1a6c3b1"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 156233,
+          "hash": "6b8a5eea59045f82"
         }
       ]
     },
@@ -648,13 +660,19 @@
       "id": "Linear",
       "name": "Linear",
       "entry": "linear.lua",
-      "bytes": 52835,
-      "hash": "af78efb9",
+      "preview": "preview.png",
+      "bytes": 244088,
+      "hash": "9ef37214",
       "files": [
         {
           "path": "linear.lua",
           "bytes": 44812,
           "hash": "4a8b4c02866b1e84"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 191253,
+          "hash": "df9d12cc97980489"
         },
         {
           "path": "scripts/player_panel.lua",
@@ -834,20 +852,6 @@
       ]
     },
     {
-      "id": "North",
-      "name": "North",
-      "entry": "north.lua",
-      "bytes": 44140,
-      "hash": "62c008db",
-      "files": [
-        {
-          "path": "north.lua",
-          "bytes": 44140,
-          "hash": "f62572eb30b21fb0"
-        }
-      ]
-    },
-    {
       "id": "Player Options Classic",
       "name": "Player Options Classic",
       "entry": "theme.lua",
@@ -874,20 +878,6 @@
           "path": "theme.lua",
           "bytes": 16759,
           "hash": "fc66a1d748aa157f"
-        }
-      ]
-    },
-    {
-      "id": "Pulse",
-      "name": "Pulse",
-      "entry": "pulse.lua",
-      "bytes": 34280,
-      "hash": "ed744eb7",
-      "files": [
-        {
-          "path": "pulse.lua",
-          "bytes": 34280,
-          "hash": "c33db6a664efb936"
         }
       ]
     },
@@ -1020,9 +1010,15 @@
       "id": "Terminal",
       "name": "Terminal",
       "entry": "terminal.lua",
-      "bytes": 55827,
-      "hash": "a367c27b",
+      "preview": "preview.png",
+      "bytes": 262452,
+      "hash": "ca41d9b4",
       "files": [
+        {
+          "path": "preview.png",
+          "bytes": 206625,
+          "hash": "42e8172104eae6bb"
+        },
         {
           "path": "scripts/player_panel.lua",
           "bytes": 8932,
@@ -1039,13 +1035,19 @@
       "id": "brutalist",
       "name": "brutalist",
       "entry": "brutalist.lua",
-      "bytes": 49221,
-      "hash": "5133ce06",
+      "preview": "preview.png",
+      "bytes": 158218,
+      "hash": "b8cd0690",
       "files": [
         {
           "path": "brutalist.lua",
           "bytes": 40604,
           "hash": "618484c20363d0ff"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 108997,
+          "hash": "f87228b844e9cacc"
         },
         {
           "path": "scripts/player_panel.lua",
@@ -1055,35 +1057,22 @@
       ]
     },
     {
-      "id": "glass",
-      "name": "glass",
-      "entry": "glass.lua",
-      "bytes": 51285,
-      "hash": "337af84f",
-      "files": [
-        {
-          "path": "glass.lua",
-          "bytes": 42859,
-          "hash": "bb6c3723b9a815a3"
-        },
-        {
-          "path": "scripts/player_panel.lua",
-          "bytes": 8426,
-          "hash": "077b012909b5a636"
-        }
-      ]
-    },
-    {
       "id": "hazard",
       "name": "hazard",
       "entry": "hazard.lua",
-      "bytes": 50760,
-      "hash": "29199778",
+      "preview": "preview.png",
+      "bytes": 244897,
+      "hash": "4b2535cf",
       "files": [
         {
           "path": "hazard.lua",
           "bytes": 41569,
           "hash": "d2bf4384e58b77bb"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 194137,
+          "hash": "17c65ca101fc76bf"
         },
         {
           "path": "scripts/player_panel.lua",
@@ -1096,9 +1085,15 @@
       "id": "spotlight",
       "name": "spotlight",
       "entry": "spotlight.lua",
-      "bytes": 48831,
-      "hash": "5ec76e47",
+      "preview": "preview.png",
+      "bytes": 198674,
+      "hash": "676a9d8a",
       "files": [
+        {
+          "path": "preview.png",
+          "bytes": 149843,
+          "hash": "a5fd39651f19ca47"
+        },
         {
           "path": "scripts/player_panel.lua",
           "bytes": 7841,
