@@ -76,12 +76,37 @@ local l = {
     text_off_y   = 0,
 }
 
--- Sidebar tabs — map to top-level page names
-local tabs = {
-    {label = "Online",  page = "Network"},
-    {label = "Weapons", page = "Weapon"},
-    {label = "Settings",page = "Settings"},
-}
+-- Sidebar tabs — the real top-level pages, read from Home rather than hardcoded.
+-- This used to be a fixed list of three ({Online, Weapons, Settings}), so the sidebar
+-- showed 3 of the 12 top-level pages and the other 9 were unreachable from it.
+--
+-- `page` is the submenu target's id hash, not its name: menu.navigate() accepts either,
+-- but the hash keeps tab matching correct when the menu is translated.
+local tabs = {}
+local tabs_at = -1
+
+local function rebuild_tabs()
+    local list = items.page_items("Home")
+    if not list then return end
+    local out = {}
+    for _, h in ipairs(list) do
+        local it = items.at(h)
+        if it and it.type == item_type.sub_menu and it.sub_menu and it.sub_menu ~= 0 then
+            out[#out + 1] = {label = it.name, page = it.sub_menu}
+        end
+    end
+    if #out > 0 then tabs = out end
+end
+
+-- Cheap, but not worth doing every frame: the top-level page set only changes when a
+-- theme reload or a dynamic tab (Scripts, DLC) rebuilds the tree.
+local function ensure_tabs()
+    local now = ctx.time()
+    if #tabs == 0 or tabs_at < 0 or now - tabs_at > 0.5 then
+        tabs_at = now
+        rebuild_tabs()
+    end
+end
 
 -- Register settings
 menu.clear_settings()
@@ -101,26 +126,24 @@ local function clamp(v, lo, hi) return math.max(lo, math.min(hi, v)) end
 local function ease_out(t) t = clamp(t, 0, 1); return 1 - (1 - t)^2 end
 
 -- Find which tab the current page belongs to
+-- Which sidebar tab the current page belongs to.
+--
+-- Sticky by design: there is no "parent of an arbitrary page" API, so once you are two
+-- or more levels deep (Weapon > Inventory > ...) nothing on the current page still names
+-- its top-level ancestor. Remembering the last tab we positively identified keeps the
+-- highlight on the right tab all the way down instead of blanking it below depth one.
+local active_ti_sticky = 0
+
 local function active_tab_index()
-    local page = menu.page_name()
+    local id = menu.page_id()
+    for i, t in ipairs(tabs) do
+        if id == t.page then active_ti_sticky = i; return i end
+    end
     local parent = menu.page_parent()
-    -- Direct match
     for i, t in ipairs(tabs) do
-        if page == t.page then return i end
+        if parent == t.label then active_ti_sticky = i; return i end
     end
-    -- Parent match
-    for i, t in ipairs(tabs) do
-        if parent == t.page or parent == "Home" then
-            -- Check if this page is a child of the tab's page
-            if page == t.page then return i end
-        end
-    end
-    -- Walk: if parent matches a tab
-    for i, t in ipairs(tabs) do
-        if parent == t.page then return i end
-    end
-    -- Home page — no tab active
-    return 0
+    return active_ti_sticky
 end
 
 -- Draw widget on right side
@@ -406,8 +429,14 @@ function draw_menu()
     local dt = ctx.delta()
 
     local page = menu.page_name()
-    -- Auto-redirect Home to first tab (sidebar IS the main nav)
-    if page == "Home" then menu.navigate(tabs[1].page); return end
+    ensure_tabs()
+    -- Auto-redirect Home to first tab (sidebar IS the main nav). Guard on the tab list
+    -- actually being built: redirecting to a nil page would strand the menu on a blank
+    -- frame, and Home is the only page that can rebuild it.
+    if page == "Home" then
+        if tabs[1] then menu.navigate(tabs[1].page) end
+        return
+    end
     if page ~= last_page then last_page = page; scroll = 0; scroll_target = 0 end
     local sel = menu.selected_index()
     local sel_changed = (sel ~= last_sel)

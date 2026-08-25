@@ -941,8 +941,8 @@
       "name": "Stand",
       "entry": "stand.lua",
       "preview": "Preview.png",
-      "bytes": 363297,
-      "hash": "dc3ff779",
+      "bytes": 364672,
+      "hash": "ca52c941",
       "files": [
         {
           "path": "Preview.png",
@@ -971,8 +971,8 @@
         },
         {
           "path": "stand.lua",
-          "bytes": 27384,
-          "hash": "0d022adde5f8a2ec"
+          "bytes": 28759,
+          "hash": "1d5579273c78989a"
         }
       ]
     },
