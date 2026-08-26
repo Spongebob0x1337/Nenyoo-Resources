@@ -1,1067 +1,659 @@
--- Cherax
--- Neon-purple mouse-driven click GUI with sidebar navigation and card columns.
+-- Generated Stand ThemeRepo conversion.
+-- Source: https://github.com/stagnate6628/stand-themerepo
 
-text.set_font_family("Trebuchet MS")
+text.set_font_family("Arial")
 
-local TITLE_FONT_FILE="Themes\\Cherax\\fonts\\Orbitron-Bold.ttf"
-local TITLE_FONT_REL="Themes/Cherax/fonts/Orbitron-Bold.ttf"
-local title_font_downloaded=false
+local THEME_NAME="Cherax"
+local LAYOUT_MODE="cherax"
+local TAB_BOTTOM=false
+local TABS_ENABLED=true
+local HEADER_FILE="Themes\\Cherax\\textures\\header.bmp"
+local HEADER_PATH="Themes/Cherax/textures/header.bmp"
+local HEADER_URL_PATH=""
+local header_handle=0
+local header_downloaded=false
+local HEADER_OVERLAY_FILE=""
+local HEADER_OVERLAY_PATH=""
+local HEADER_OVERLAY_URL_PATH=""
+local header_overlay_handle=0
+local header_overlay_downloaded=false
+local SUBHEADER_FILE=""
+local SUBHEADER_PATH=""
+local SUBHEADER_URL_PATH=""
+local subheader_handle=0
+local subheader_downloaded=false
+local FOOTER_FILE=""
+local FOOTER_PATH=""
+local FOOTER_URL_PATH=""
+local footer_handle=0
+local footer_downloaded=false
+local BADGE_FILE=""
+local BADGE_PATH=""
+local BADGE_URL_PATH=""
+local BADGE_IS_LOGO=false
+local badge_handle=0
+local BACKGROUND_FILE=""
+local BACKGROUND_PATH=""
+local BACKGROUND_URL_PATH=""
+local background_handle=0
+local background_downloaded=false
+local TOGGLE_ON_FILE=""
+local TOGGLE_ON_PATH=""
+local TOGGLE_ON_URL_PATH=""
+local toggle_on_handle=0
+local toggle_on_downloaded=false
+local TOGGLE_OFF_FILE=""
+local TOGGLE_OFF_PATH=""
+local TOGGLE_OFF_URL_PATH=""
+local toggle_off_handle=0
+local toggle_off_downloaded=false
+local LIST_ICON_FILE=""
+local LIST_ICON_PATH=""
+local LIST_ICON_URL_PATH=""
+local list_icon_handle=0
+local list_icon_downloaded=false
+local UI_ASSETS={
 
-local function valid_font_data(data)
-    if not data or #data<1024 then return false end
-    local sig=data:sub(1,4)
-    return sig=="OTTO" or (data:byte(1)==0 and data:byte(2)==1 and data:byte(3)==0 and data:byte(4)==0)
-end
-
-local function apply_title_font() text.set_font_for(font.title,TITLE_FONT_REL) end
-
-do
-    local data=file.read(TITLE_FONT_FILE)
-    if valid_font_data(data) then
-        apply_title_font()
-    elseif net and net.get then
-        net.get("raw.githubusercontent.com","/google/fonts/main/ofl/orbitron/static/Orbitron-Bold.ttf",function(body)
-            if valid_font_data(body) then title_font_downloaded=file.write(TITLE_FONT_FILE,body) end
-        end,function() end)
-    end
-end
-
--- ── Font Setup ──
-text.set_size(font.title, 20)
-text.set_size(font.item, 12)
-text.set_size(font.breadcrumb, 11)
-text.set_size(font.desc, 10)
-text.set_size(font.label, 9)
-text.set_size(font.value, 11)
-text.set_size(font.small, 10)
-text.set_size(font.tiny, 8)
-
-text.set_weight(font.title, 700)
-text.set_weight(font.item, 400)
-text.set_weight(font.breadcrumb, 500)
-text.set_weight(font.value, 500)
-text.set_weight(font.desc, 400)
-
--- ── Settings ──
-menu.clear_settings()
-menu.add_setting_submenu("Colors", "Click GUI colors")
-menu.add_sub_color("Accent", 190, 0, 255, 255, "Primary neon-purple accent")
-menu.add_sub_color("Background", 7, 2, 14, 248, "Window background")
-
-menu.add_setting_submenu("Layout", "Window dimensions")
-menu.add_sub_slider("Width", 900, 650, 1200, 10, "Window width")
-menu.add_sub_slider("Height", 620, 440, 850, 10, "Window height")
-menu.add_sub_slider("Item Height", 30, 22, 44, 1, "Control row height")
-
--- ── Settings Readers ──
-local function sc(name)
-    local s = menu.get_setting(name)
-    if s then return {s.r, s.g, s.b, s.a} end
-    return nil
-end
-local function sf(name, def)
-    local s = menu.get_setting(name)
-    if s then return s.f_val end
-    return def
-end
-
--- ── Colors ──
-local function make_colors()
-    local acc = sc("Accent") or {190, 0, 255, 255}
-    local bg  = sc("Background") or {7, 2, 14, 248}
-    return {
-        bg      = bg,
-        header  = {math.max(bg[1]-6,0), math.max(bg[2]-6,0), math.max(bg[3]-6,0), 255},
-        tab_bg  = {math.max(bg[1]-4,0), math.max(bg[2]-4,0), math.max(bg[3]-4,0), 255},
-        stab_bg = {math.max(bg[1]-2,0), math.max(bg[2]-2,0), math.max(bg[3]-2,0), 255},
-        accent  = acc,
-        accent_d= {math.max(acc[1]-30,0), math.max(acc[2]-30,0), math.max(acc[3]-35,0), 255},
-        txt     = {238, 230, 248, 255},
-        txt_dim = {145, 126, 162, 255},
-        hover   = {210, 45, 255, 18},
-        div     = {79, 15, 104, 210},
-        chk_bg  = {28, 7, 39, 255},
-        sli_bg  = {39, 7, 54, 255},
-        desc_bg = {math.max(bg[1]-8,0), math.max(bg[2]-8,0), math.max(bg[3]-8,0), 255},
-        inp_bg  = {22, 22, 34, 255},
-        btn_bg  = {26, 26, 38, 255},
-        btn_hov = {36, 36, 52, 255},
-    }
-end
-local CLR = make_colors()
-
--- ── Layout Constants ──
-local HDR_H    = 46
-local TAB_H    = 32
-local STAB_H   = 30
-local DESC_H   = 28
-local SIDE_W   = 58
-local CARD_GAP = 10
-local PAD      = 10
-local CHECK_SZ = 14
-local SLIDER_H = 5
-local SCROLL_W = 4
-
--- ── Categories ──
-local cats = {
-    {label="S", page="Self"}, {label="N", page="Network"},
-    {label="V", page="Vehicle"}, {label="W", page="Weapon"},
-    {label="X", page="VFX"}, {label="O", page="World"},
-    {label="M", page="Misc"}, {label="T", page="Teleport"},
-    {label="/", page="Scripts"}, {label="P", page="Spooner"},
-    {label="!", page="Protections"}, {label="*", page="Settings"},
 }
 
--- ── State ──
-local win_x, win_y
-local dragging_win = false
-local drag_ox, drag_oy = 0, 0
-local active_cat = 0
-local scroll = 0
-local scroll_tgt = 0
-local last_page = ""
-local hover_idx = -1
-
-local drag_slider = -1
-local drag_sl_x, drag_sl_w = 0, 0
-local drag_sl_min, drag_sl_max = 0, 0
-local drag_sl_int = false
-
-local edit_active = false
-local edit_idx = -1
-local edit_buf = ""
-local edit_type = 0
-
-local cpick_open = false
-local cpick_idx = -1
-local cpick_vals = {0, 0, 0, 255}
-local cpick_drag = 0
-
--- ── Sub-tab State ──
-local sub_tabs = {}         -- {name, idx} from root page submenu items
-local sub_tab_sel = -1      -- -1 = general tab, 1+ = sub-tab
-local sub_tab_parent = ""   -- root page these tabs belong to
-local has_general = false   -- root page has non-submenu items
-
--- ── Helpers ──
-local function lerp(a, b, t) return a + (b - a) * t end
-local function clamp(v, lo, hi) return math.max(lo, math.min(hi, v)) end
-
-local function in_rect(x1, y1, x2, y2)
-    local mx, my = input.mouse_x(), input.mouse_y()
-    return mx >= x1 and mx < x2 and my >= y1 and my < y2
+local function load_header()
+    if HEADER_PATH~="" then header_handle=draw.load_image(HEADER_PATH) end
 end
 
-local function click_in(x1, y1, x2, y2)
-    return in_rect(x1, y1, x2, y2) and input.mouse_clicked(0)
+local function load_structural_assets()
+    if HEADER_OVERLAY_PATH~="" then header_overlay_handle=draw.load_image(HEADER_OVERLAY_PATH) end
+    if SUBHEADER_PATH~="" then subheader_handle=draw.load_image(SUBHEADER_PATH) end
+    if FOOTER_PATH~="" then footer_handle=draw.load_image(FOOTER_PATH) end
+    if BADGE_PATH~="" then badge_handle=draw.load_image(BADGE_PATH) end
 end
 
-local function center_text(fnt, x1, x2, y, s, r, g, b, a)
-    local w = text.width(fnt, s)
-    text.draw(fnt, x1 + (x2 - x1 - w) * 0.5, y, r, g, b, a, s)
+local function load_background()
+    if BACKGROUND_PATH~="" then background_handle=draw.load_image(BACKGROUND_PATH) end
 end
 
-local function init_pos()
-    if not win_x then
-        local W = sf("Width", 900)
-        local H = sf("Height", 620)
-        win_x = (ctx.screen_w() - W) / 2
-        win_y = (ctx.screen_h() - H) / 2
-    end
+local function load_ui_assets()
+    if TOGGLE_ON_PATH~="" then toggle_on_handle=draw.load_image(TOGGLE_ON_PATH) end
+    if TOGGLE_OFF_PATH~="" then toggle_off_handle=draw.load_image(TOGGLE_OFF_PATH) end
+    if LIST_ICON_PATH~="" then list_icon_handle=draw.load_image(LIST_ICON_PATH) end
 end
 
--- ── Sub-tab Building ──
-local function rebuild_sub_tabs()
-    sub_tabs = {}
-    has_general = false
-    local count = menu.item_count()
-    for i = 0, count - 1 do
-        local item = menu.get_item(i)
-        if item then
-            if item.type == item_type.sub_menu then
-                table.insert(sub_tabs, {name = item.name, idx = i})
-            else
-                has_general = true
-            end
-        end
-    end
-    sub_tab_parent = menu.page_name()
+local function fetch_asset(file_path,url_path,done)
+    if file_path=="" or url_path=="" or not net or not net.get then return end
+    net.get("raw.githubusercontent.com",url_path,function(body)
+        if body and #body>128 then done(file.write(file_path,body)) end
+    end,function() end)
+end
 
-    if not has_general and #sub_tabs > 0 then
-        menu.set_selected(sub_tabs[1].idx)
-        menu.activate()
-        sub_tab_sel = 1
+local function prepare_asset(file_path,path,url_path,loaded)
+    if file_path=="" or path=="" then return end
+    local data=file.read(file_path)
+    if data and #data>128 then
+        loaded(draw.load_image(path))
     else
-        sub_tab_sel = -1
+        fetch_asset(file_path,url_path,function(ok) if ok then loaded(draw.load_image(path)) end end)
     end
 end
 
--- depth: 0 = root page, 1 = sub-tab, 2+ = deeper
-local function get_depth()
-    if menu.page_name() == sub_tab_parent then return 0 end
-    if menu.page_parent() == sub_tab_parent then return 1 end
-    return 2
-end
-
--- ── Navigate to Category ──
-local function go_cat(idx)
-    active_cat = idx
-    last_page = cats[idx + 1].page
-    while menu.page_parent() ~= "" do menu.go_back() end
-    menu.navigate(cats[idx + 1].page)
-    rebuild_sub_tabs()
-    scroll_tgt = 0
-    scroll = 0
-    hover_idx = -1
-    cpick_open = false
-    edit_active = false
-end
-
--- ── Apply Text Input ──
-local function apply_edit()
-    if not edit_active then return end
-    if edit_type == item_type.input_float or edit_type == item_type.slider
-       or edit_type == item_type.float_toggle then
-        local v = tonumber(edit_buf)
-        if v then menu.set_f_val(edit_idx, v) end
-    elseif edit_type == item_type.input_int or edit_type == item_type.int_option
-           or edit_type == item_type.int_toggle then
-        local v = tonumber(edit_buf)
-        if v then menu.set_i_val(edit_idx, math.floor(v)) end
+do
+    if HEADER_FILE~="" then
+        local data=file.read(HEADER_FILE)
+        if data and #data>128 then
+            load_header()
+        elseif HEADER_URL_PATH~="" and net and net.get then
+            net.get("raw.githubusercontent.com",HEADER_URL_PATH,function(body)
+                if body and #body>128 then header_downloaded=file.write(HEADER_FILE,body) end
+            end,function() end)
+        end
+    end
+    if BACKGROUND_FILE~="" then
+        local data=file.read(BACKGROUND_FILE)
+        if data and #data>128 then
+            load_background()
+        elseif BACKGROUND_URL_PATH~="" and net and net.get then
+            net.get("raw.githubusercontent.com",BACKGROUND_URL_PATH,function(body)
+                if body and #body>128 then background_downloaded=file.write(BACKGROUND_FILE,body) end
+            end,function() end)
+        end
+    end
+    prepare_asset(HEADER_OVERLAY_FILE,HEADER_OVERLAY_PATH,HEADER_OVERLAY_URL_PATH,function(h) header_overlay_handle=h end)
+    prepare_asset(SUBHEADER_FILE,SUBHEADER_PATH,SUBHEADER_URL_PATH,function(h) subheader_handle=h end)
+    prepare_asset(FOOTER_FILE,FOOTER_PATH,FOOTER_URL_PATH,function(h) footer_handle=h end)
+    prepare_asset(BADGE_FILE,BADGE_PATH,BADGE_URL_PATH,function(h) badge_handle=h end)
+    local toggle_on_data=TOGGLE_ON_FILE~="" and file.read(TOGGLE_ON_FILE) or nil
+    if toggle_on_data and #toggle_on_data>128 then
+        load_ui_assets()
     else
-        menu.set_selected(edit_idx)
-        menu.set_input_buffer(edit_buf)
-        menu.confirm_input()
+        fetch_asset(TOGGLE_ON_FILE,TOGGLE_ON_URL_PATH,function(ok) toggle_on_downloaded=ok end)
     end
-    edit_active = false
-end
-
--- ── Keyboard Input for Editing ──
-local function process_edit_keys()
-    if not edit_active then return end
-    local chars = input.get_chars()
-    if chars ~= "" then
-        for ch in chars:gmatch(".") do
-            local b = string.byte(ch)
-            if edit_type == item_type.input_text or edit_type == item_type.search then
-                if #edit_buf < 127 then edit_buf = edit_buf .. ch end
-            else
-                local ok = (b >= 48 and b <= 57)
-                    or (b == 45 and #edit_buf == 0)
-                    or (b == 46
-                        and (edit_type == item_type.input_float
-                             or edit_type == item_type.slider
-                             or edit_type == item_type.float_toggle)
-                        and not edit_buf:find("%."))
-                if ok then edit_buf = edit_buf .. ch end
-            end
-        end
-    end
-    if input.key_just_pressed(VK.BACK) and #edit_buf > 0 then
-        edit_buf = edit_buf:sub(1, -2)
-    end
-    if input.key_just_pressed(VK.RETURN) then apply_edit() end
-    if input.key_just_pressed(VK.ESCAPE) then edit_active = false end
-end
-
--- ── Draw: Header ──
-local function draw_header(x, y, w)
-    draw.rect(x, y, x + w, y + HDR_H, CLR.header[1], CLR.header[2], CLR.header[3], 250, 5)
-    draw.rect(x, y + HDR_H - 5, x + w, y + HDR_H, CLR.header[1], CLR.header[2], CLR.header[3], 250)
-    draw.rect_gradient(x, y, x + w, y + 2,
-        CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],255,
-        CLR.accent[1],CLR.accent[2],CLR.accent[3],255,
-        CLR.accent[1],CLR.accent[2],CLR.accent[3],255,
-        CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],255)
-    local th = text.height(font.title)
-    center_text(font.title,x,x+w,y+(HDR_H-th)*0.5,"CHERAX",245,243,250,255)
-    text.draw(font.item,x+w-54,y+(HDR_H-text.height(font.item))*0.5,
-        230,225,238,235,"Q")
-    text.draw(font.title,x+w-28,y+(HDR_H-th)*0.5,
-        245,243,250,255,"*")
-    -- Header drag handled by menu.drag_header() in draw_menu
-end
-
--- ── Draw: Vertical Category Bar ──
-local function draw_cats(x, y, h)
-    draw.rect(x, y, x + SIDE_W, y + h, CLR.tab_bg[1], CLR.tab_bg[2], CLR.tab_bg[3], 250)
-    draw.line(x+SIDE_W-1,y,x+SIDE_W-1,y+h,CLR.div[1],CLR.div[2],CLR.div[3],180)
-    local ih = h / #cats
-    for i, cat in ipairs(cats) do
-        local ci = i - 1
-        local iy = y + ci * ih
-        local sel = ci == active_cat
-        local hov = in_rect(x,iy,x+SIDE_W,iy+ih)
-        if sel then
-            draw.rect(x+5,iy+4,x+SIDE_W-5,iy+ih-4,
-                CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],220,5)
-            draw.rect(x,iy+5,x+3,iy+ih-5,CLR.accent[1],CLR.accent[2],CLR.accent[3],255,2)
-        elseif hov then
-            draw.rect(x+5,iy+4,x+SIDE_W-5,iy+ih-4,
-                CLR.hover[1], CLR.hover[2], CLR.hover[3], CLR.hover[4])
-        end
-        local c = sel and CLR.accent or (hov and CLR.txt or CLR.txt_dim)
-        local tth = text.height(font.title)
-        center_text(font.title,x,x+SIDE_W,iy+(ih-tth)*0.5,
-            cat.label, c[1], c[2], c[3], c[4])
-        if hov then
-            local label=cat.page
-            local lw=text.width(font.small,label)+14
-            draw.rect(x+SIDE_W+4,iy+(ih-22)*0.5,x+SIDE_W+4+lw,iy+(ih+22)*0.5,
-                12,4,20,235,3)
-            text.draw(font.small,x+SIDE_W+11,iy+(ih-text.height(font.small))*0.5,
-                CLR.txt[1],CLR.txt[2],CLR.txt[3],255,label)
-        end
-        if click_in(x,iy,x+SIDE_W,iy+ih) then go_cat(ci) end
-    end
-end
-
--- ── Draw: Sub-Tabs ── returns height used (0 if none)
-local function draw_sub_tabs(x, y, w, depth)
-    if #sub_tabs == 0 or depth >= 2 then return 0 end
-
-    draw.rect(x, y, x + w, y + STAB_H,
-        CLR.stab_bg[1], CLR.stab_bg[2], CLR.stab_bg[3], 255)
-    draw.line(x, y + STAB_H - 1, x + w, y + STAB_H - 1,
-        CLR.div[1], CLR.div[2], CLR.div[3], 80)
-
-    local n = #sub_tabs + (has_general and 1 or 0)
-    local tw = w / n
-    local ti = 0
-
-    -- General tab (non-submenu items from root page)
-    if has_general then
-        local tx = x
-        local sel = sub_tab_sel == -1
-        local hov = in_rect(tx, y, tx + tw, y + STAB_H)
-        if sel then
-            draw.rect(tx, y + STAB_H - 2, tx + tw, y + STAB_H,
-                CLR.accent[1], CLR.accent[2], CLR.accent[3], 255)
-        elseif hov then
-            draw.rect(tx, y, tx + tw, y + STAB_H,
-                CLR.hover[1], CLR.hover[2], CLR.hover[3], CLR.hover[4])
-        end
-        local c = sel and CLR.txt or (hov and CLR.txt or CLR.txt_dim)
-        local sth = text.height(font.small)
-        center_text(font.small, tx, tx + tw, y + (STAB_H - sth) * 0.5,
-            "General", c[1], c[2], c[3], c[4])
-        if click_in(tx, y, tx + tw, y + STAB_H) and sub_tab_sel ~= -1 then
-            menu.go_back()
-            sub_tab_sel = -1
-            scroll_tgt = 0
-            scroll = 0
-        end
-        ti = 1
-    end
-
-    -- Sub-tabs
-    for i, tab in ipairs(sub_tabs) do
-        local tx = x + (ti + i - 1) * tw
-        local sel = sub_tab_sel == i
-        local hov = in_rect(tx, y, tx + tw, y + STAB_H)
-        if sel then
-            draw.rect(tx, y + STAB_H - 2, tx + tw, y + STAB_H,
-                CLR.accent[1], CLR.accent[2], CLR.accent[3], 255)
-        elseif hov then
-            draw.rect(tx, y, tx + tw, y + STAB_H,
-                CLR.hover[1], CLR.hover[2], CLR.hover[3], CLR.hover[4])
-        end
-        local c = sel and CLR.txt or (hov and CLR.txt or CLR.txt_dim)
-        local sth = text.height(font.small)
-        center_text(font.small, tx, tx + tw, y + (STAB_H - sth) * 0.5,
-            tab.name, c[1], c[2], c[3], c[4])
-        if click_in(tx, y, tx + tw, y + STAB_H) and sub_tab_sel ~= i then
-            if sub_tab_sel ~= -1 then
-                menu.go_back()
-            end
-            menu.set_selected(tab.idx)
-            menu.activate()
-            sub_tab_sel = i
-            scroll_tgt = 0
-            scroll = 0
-        end
-    end
-
-    return STAB_H
-end
-
--- ── Draw: Breadcrumb (depth 2+) ── returns height
-local function draw_breadcrumb(x, y, w)
-    local page = menu.page_name()
-    local th = text.height(font.breadcrumb)
-    local BC_H = 22
-    local ty = y + (BC_H - th) * 0.5
-    local s = "< " .. page
-    text.draw(font.breadcrumb, x + PAD, ty,
-        CLR.txt[1], CLR.txt[2], CLR.txt[3], 200, s)
-    local sw = text.width(font.breadcrumb, s)
-    if click_in(x, y, x + PAD + sw + 8, y + BC_H) then
-        menu.go_back()
-        scroll_tgt = 0
-        scroll = 0
-    end
-    return BC_H
-end
-
--- ── Draw: Checkbox ──
-local function draw_check(x, y, checked)
-    draw.rect(x, y, x + CHECK_SZ, y + CHECK_SZ,
-        CLR.chk_bg[1], CLR.chk_bg[2], CLR.chk_bg[3], 255, 2)
-    if checked then
-        draw.rect(x, y, x + CHECK_SZ, y + CHECK_SZ,
-            CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, 2)
-        draw.line(x+3, y+CHECK_SZ*0.5,
-            x+CHECK_SZ*0.45, y+CHECK_SZ-3, 255,255,255,255, 1.5)
-        draw.line(x+CHECK_SZ*0.45, y+CHECK_SZ-3,
-            x+CHECK_SZ-3, y+3, 255,255,255,255, 1.5)
+    local toggle_off_data=TOGGLE_OFF_FILE~="" and file.read(TOGGLE_OFF_FILE) or nil
+    if toggle_off_data and #toggle_off_data>128 then
+        load_ui_assets()
     else
-        draw.rect_outline(x, y, x + CHECK_SZ, y + CHECK_SZ,
-            55, 55, 75, 200, 2)
+        fetch_asset(TOGGLE_OFF_FILE,TOGGLE_OFF_URL_PATH,function(ok) toggle_off_downloaded=ok end)
+    end
+    local list_icon_data=LIST_ICON_FILE~="" and file.read(LIST_ICON_FILE) or nil
+    if list_icon_data and #list_icon_data>128 then
+        load_ui_assets()
+    else
+        fetch_asset(LIST_ICON_FILE,LIST_ICON_URL_PATH,function(ok) list_icon_downloaded=ok end)
+    end
+    for _,asset in pairs(UI_ASSETS) do
+        prepare_asset(asset.file,asset.path,asset.url,function(h) asset.handle=h end)
     end
 end
 
--- ── Draw: Slider Track ──
-local function draw_sli(idx, x, y, w, val, mn, mx, is_int)
-    local t = (mx ~= mn) and (val - mn) / (mx - mn) or 0
-    t = clamp(t, 0, 1)
-    draw.rect(x, y, x + w, y + SLIDER_H,
-        CLR.sli_bg[1], CLR.sli_bg[2], CLR.sli_bg[3], 255, 2)
-    local fw = t * w
-    if fw > 1 then
-        draw.rect_gradient(x, y, x + fw, y + SLIDER_H,
-            CLR.accent_d[1], CLR.accent_d[2], CLR.accent_d[3], 255,
-            CLR.accent[1],   CLR.accent[2],   CLR.accent[3],   255,
-            CLR.accent[1],   CLR.accent[2],   CLR.accent[3],   255,
-            CLR.accent_d[1], CLR.accent_d[2], CLR.accent_d[3], 255)
+local function ui_asset(...)
+    local keys={...}
+    for i=1,#keys do
+        local asset=UI_ASSETS[string.lower(keys[i] or "")]
+        if asset and asset.handle and asset.handle>0 then return asset.handle end
     end
-    local kx = x + fw
-    local ky = y + SLIDER_H * 0.5
-    draw.circle(kx, ky, 5, CLR.accent[1], CLR.accent[2], CLR.accent[3], 255)
-    draw.circle(kx, ky, 3, 255, 255, 255, 240)
-    if input.mouse_clicked(0) and in_rect(x - 6, y - 8, x + w + 6, y + SLIDER_H + 8) then
-        drag_slider = idx
-        drag_sl_x = x
-        drag_sl_w = w
-        drag_sl_min = mn
-        drag_sl_max = mx
-        drag_sl_int = is_int
+    return 0
+end
+
+local function native_height(handle,width,fallback)
+    if handle and handle>0 then
+        local iw,ih=draw.image_size(handle)
+        if iw and ih and iw>0 and ih>0 then return math.max(1,width*ih/iw) end
+    end
+    return fallback
+end
+
+text.set_weight(font.title,700)
+text.set_weight(font.item,500)
+text.set_weight(font.value,600)
+text.set_weight(font.small,600)
+
+local applied_font_scale=-1
+local function apply_font_scale(scale)
+    if math.abs(applied_font_scale-scale)<0.001 then return end
+    applied_font_scale=scale
+    text.set_size(font.title,math.max(1,17*scale))
+    text.set_size(font.item,math.max(1,17*scale))
+    text.set_size(font.value,math.max(1,15*scale))
+    text.set_size(font.small,math.max(1,13*scale))
+    text.set_size(font.tiny,math.max(1,10*scale))
+    text.set_size(font.label,math.max(1,16*scale))
+end
+
+local SETTINGS_FILE="stand_import_v4_cherax.ini"
+menu.clear_settings()
+menu.add_setting_color("Stand Accent",111,35,224,255,"Imported primary colour")
+menu.add_setting_color("Stand Background",12,1,20,255,"Imported background colour")
+menu.add_setting_slider("Stand Width",484,120,1200,1,"Width in Stand's 1920x1080 HUD pixels")
+menu.add_setting_slider("Stand Rows",12,5,24,1,"Visible option rows")
+menu.add_setting_slider("Stand Row Height",35,12,100,1,"Row height in Stand HUD pixels")
+menu.add_setting_slider("Stand Position X",783,0,1920,1,"Main-list X coordinate in Stand HUD pixels")
+menu.add_setting_slider("Stand Position Y",102,0,1080,1,"Main-list Y coordinate in Stand HUD pixels")
+menu.add_setting_action("Reset Theme","Reset imported theme settings")
+
+local function setting(name) return menu.get_setting(name) end
+local function clamp(v,lo,hi) return math.max(lo,math.min(hi,v)) end
+
+local CYCLIC={
+    [item_type.array_option]=true,[item_type.loop_option]=true,
+    [item_type.array_toggle]=true,[item_type.loop_toggle]=true
+}
+local NUMERIC={
+    [item_type.slider]=true,[item_type.int_option]=true,
+    [item_type.float_toggle]=true,[item_type.int_toggle]=true
+}
+
+local function load_settings()
+    local body=file.read(SETTINGS_FILE)
+    if not body then return end
+    for line in body:gmatch("[^\r\n]+") do
+        local key,value=line:match("^(.-)=(.*)$")
+        if key=="accent" or key=="background" then
+            local r,g,b,a=value:match("(%d+),(%d+),(%d+),(%d+)")
+            if r then
+                menu.set_setting(key=="accent" and "Stand Accent" or "Stand Background",
+                    tonumber(r),tonumber(g),tonumber(b),tonumber(a))
+            end
+        elseif key=="width" then menu.set_setting("Stand Width",tonumber(value) or 484)
+        elseif key=="rows" then menu.set_setting("Stand Rows",tonumber(value) or 12)
+        elseif key=="row_height" then menu.set_setting("Stand Row Height",tonumber(value) or 35)
+        elseif key=="position_x" then menu.set_setting("Stand Position X",tonumber(value) or 783)
+        elseif key=="position_y" then menu.set_setting("Stand Position Y",tonumber(value) or 102)
+        end
     end
 end
 
--- ── Draw Single Item ──
--- skip_subs: if true, skip sub_menu items (they're rendered as tabs)
-local function draw_item(idx, x, y, w, ih, clip_top, clip_bot, skip_subs)
-    local item = menu.get_item(idx)
-    if not item then return 0 end
-    if skip_subs and item.type == item_type.sub_menu then return 0 end
+local function serialize_settings()
+    local accent=setting("Stand Accent") or {r=111,g=35,b=224,a=255}
+    local background=setting("Stand Background") or {r=12,g=1,b=20,a=255}
+    local width=setting("Stand Width") or {f_val=484}
+    local rows=setting("Stand Rows") or {f_val=12}
+    local row_height=setting("Stand Row Height") or {f_val=35}
+    local position_x=setting("Stand Position X") or {f_val=783}
+    local position_y=setting("Stand Position Y") or {f_val=102}
+    return table.concat({
+        "accent="..accent.r..","..accent.g..","..accent.b..","..accent.a,
+        "background="..background.r..","..background.g..","..background.b..","..background.a,
+        "width="..width.f_val,
+        "rows="..rows.f_val,
+        "row_height="..row_height.f_val,
+        "position_x="..position_x.f_val,
+        "position_y="..position_y.f_val
+    },"\n")
+end
 
-    local mx, my = input.mouse_x(), input.mouse_y()
-    local hov = mx >= x and mx < x + w and my >= y and my < y + ih
-                and my >= clip_top and my < clip_bot
-    local th = text.height(font.item)
-    local ty = y + (ih - th) * 0.5
-    local t = item.type
-    local extra = 0
+local function reset_settings()
+    menu.set_setting("Stand Accent",111,35,224,255)
+    menu.set_setting("Stand Background",12,1,20,255)
+    menu.set_setting("Stand Width",484)
+    menu.set_setting("Stand Rows",12)
+    menu.set_setting("Stand Row Height",35)
+    menu.set_setting("Stand Position X",783)
+    menu.set_setting("Stand Position Y",102)
+    file.remove(SETTINGS_FILE)
+end
 
-    if hov then
-        draw.rect(x, y, x + w, y + ih,
-            CLR.hover[1], CLR.hover[2], CLR.hover[3], CLR.hover[4])
-        hover_idx = idx
+load_settings()
+local last_settings=serialize_settings()
+local save_pending=false
+local save_at=0
+local edit_on=false
+local edit_idx=-1
+local edit_type=0
+local edit_buf=""
+local edit_frame=-1
+
+local function hit(x1,y1,x2,y2)
+    local mx,my=input.mouse_x(),input.mouse_y()
+    return mx>=x1 and mx<x2 and my>=y1 and my<y2
+end
+
+local function item_value(item)
+    if CYCLIC[item.type] then return item.current_value or "" end
+    if item.type==item_type.input_text or item.type==item_type.search then
+        return item.text~="" and item.text or "..."
     end
+    if item.type==item_type.input_int or item.type==item_type.int_option or item.type==item_type.int_toggle then
+        return tostring(item.i_val or 0)
+    end
+    if item.type==item_type.input_float or item.type==item_type.slider or item.type==item_type.float_toggle then
+        return string.format((item.f_step or 1)<1 and "%.1f" or "%.0f",item.f_val or 0)
+    end
+    return ""
+end
 
-    -- ── Toggle types ──
-    if t == item_type.toggle or t == item_type.float_toggle or t == item_type.int_toggle
-       or t == item_type.array_toggle or t == item_type.loop_toggle then
-        local cx = x + PAD
-        local cy = y + (ih - CHECK_SZ) * 0.5
-        draw_check(cx, cy, item.on)
-        text.draw(font.item, cx + CHECK_SZ + 6, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
+local function indicator_asset(item,toggle_type,action_mark)
+    if item.disabled then return ui_asset("disabled") end
+    if toggle_type then
+        local list_toggle=item.type==item_type.array_toggle or item.type==item_type.loop_toggle
         if item.on then
-            if t == item_type.float_toggle then
-                local vs = string.format("%.2f", item.f_val)
-                local vw = text.width(font.value, vs)
-                text.draw(font.value, x + w - PAD - vw, ty,
-                    CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, vs)
-                extra = 14
-                local sx = x + PAD + CHECK_SZ + 6
-                local sw = w - PAD * 2 - CHECK_SZ - 6
-                draw_sli(idx, sx, y + ih + 2, sw, item.f_val, item.f_min, item.f_max, false)
-            elseif t == item_type.int_toggle then
-                local vs = tostring(item.i_val)
-                local vw = text.width(font.value, vs)
-                text.draw(font.value, x + w - PAD - vw, ty,
-                    CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, vs)
-                extra = 14
-                local sx = x + PAD + CHECK_SZ + 6
-                local sw = w - PAD * 2 - CHECK_SZ - 6
-                draw_sli(idx, sx, y + ih + 2, sw, item.i_val, item.i_min, item.i_max, true)
-            elseif t == item_type.array_toggle or t == item_type.loop_toggle then
-                local cv = item.current_value or ""
-                local vw = text.width(font.value, cv)
-                text.draw(font.value, x + w - PAD - vw, ty,
-                    CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, cv)
-            end
+            return list_toggle and ui_asset("toggle on list","toggle on","enabled")
+                or ui_asset("toggle on","enabled")
         end
-        if hov and input.mouse_clicked(0) then
-            if item.on and (t == item_type.array_toggle or t == item_type.loop_toggle) then
-                if mx > x + w * 0.6 then
-                    menu.set_value_index(idx, (item.value_index + 1) % item.value_count)
-                else
-                    menu.toggle_item(idx)
-                end
-            else
-                menu.toggle_item(idx)
-            end
-        end
+        return list_toggle and ui_asset("toggle off list","toggle off","disabled")
+            or ui_asset("toggle off","disabled")
+    end
+    if item.type==item_type.selected_tick then return ui_asset("enabled") end
+    if item.type==item_type.search then return ui_asset("search") end
+    if NUMERIC[item.type] or item.type==item_type.input_text or item.type==item_type.input_int
+        or item.type==item_type.input_float then return ui_asset("edit") end
+    if item.type==item_type.sub_menu then return ui_asset("list","link") end
+    if action_mark then return ui_asset("link","list") end
+    return 0
+end
 
-    -- ── Slider (float) ──
-    elseif t == item_type.slider then
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local vs = string.format("%.2f", item.f_val)
-        local vw = text.width(font.value, vs)
-        text.draw(font.value, x + w - PAD - vw, ty,
-            CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, vs)
-        extra = 10
-        draw_sli(idx, x + PAD, y + ih, w - PAD * 2, item.f_val, item.f_min, item.f_max, false)
+local function adjust(item,dir)
+    local idx=item._idx
+    if CYCLIC[item.type] and (item.value_count or 0)>0 then
+        local value=((item.value_index or 0)+dir)%item.value_count
+        if value<0 then value=value+item.value_count end
+        menu.set_value_index(idx,value)
+        return true
+    elseif item.type==item_type.int_option or item.type==item_type.int_toggle then
+        local step=(item.i_step or 0)~=0 and item.i_step or 1
+        menu.set_i_val(idx,clamp((item.i_val or 0)+dir*step,item.i_min or -2147483648,item.i_max or 2147483647))
+        return true
+    elseif item.type==item_type.slider or item.type==item_type.float_toggle then
+        local step=(item.f_step or 0)~=0 and item.f_step or 0.1
+        menu.set_f_val(idx,clamp((item.f_val or 0)+dir*step,item.f_min or -1000000,item.f_max or 1000000))
+        return true
+    end
+    return false
+end
 
-    -- ── Int Option ──
-    elseif t == item_type.int_option then
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local vs = tostring(item.i_val)
-        local vw = text.width(font.value, vs)
-        text.draw(font.value, x + w - PAD - vw, ty,
-            CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, vs)
-        extra = 10
-        draw_sli(idx, x + PAD, y + ih, w - PAD * 2, item.i_val, item.i_min, item.i_max, true)
-
-    -- ── Submenu (only shown at depth 2+ where they're not tabs) ──
-    elseif t == item_type.sub_menu then
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local aw = text.width(font.value, ">")
-        text.draw(font.value, x + w - PAD - aw, ty,
-            CLR.txt_dim[1], CLR.txt_dim[2], CLR.txt_dim[3], 180, ">")
-        if hov and input.mouse_clicked(0) then
-            menu.set_selected(idx)
-            menu.activate()
-            scroll_tgt = 0
-            scroll = 0
-        end
-
-    -- ── Action ──
-    elseif t == item_type.action then
-        local bx = x + PAD
-        local bw = w - PAD * 2
-        local by = y + 3
-        local bh = ih - 6
-        local bg = hov and CLR.btn_hov or CLR.btn_bg
-        draw.rect(bx, by, bx + bw, by + bh, bg[1], bg[2], bg[3], 255, 3)
-        draw.rect_outline(bx, by, bx + bw, by + bh, 50, 50, 70, 150, 3)
-        center_text(font.item, bx, bx + bw, by + (bh - th) * 0.5,
-            item.name, CLR.txt[1], CLR.txt[2], CLR.txt[3], 255)
-        if hov and input.mouse_clicked(0) then
-            menu.set_selected(idx)
-            menu.activate()
-        end
-
-    -- ── Selected Tick ──
-    elseif t == item_type.selected_tick then
-        local bx = x + PAD
-        local bw = w - PAD * 2
-        local by = y + 3
-        local bh = ih - 6
-        local bg = hov and CLR.btn_hov or CLR.btn_bg
-        draw.rect(bx, by, bx + bw, by + bh, bg[1], bg[2], bg[3], 255, 3)
-        draw.rect_outline(bx, by, bx + bw, by + bh, 50, 50, 70, 150, 3)
-        local nc = hov and CLR.txt or {CLR.txt[1], CLR.txt[2], CLR.txt[3], 200}
-        text.draw(font.item, bx + PAD, by + (bh - th) * 0.5,
-            nc[1], nc[2], nc[3], nc[4] or 255, item.name)
-        local tw2 = text.width(font.value, "v")
-        local tc = hov and CLR.accent or CLR.txt_dim
-        text.draw(font.value, bx + bw - PAD - tw2, by + (bh - th) * 0.5,
-            tc[1], tc[2], tc[3], 220, "v")
-        if hov and input.mouse_clicked(0) then
-            menu.set_selected(idx)
-            menu.activate()
-        end
-
-    -- ── Array / Loop ──
-    elseif t == item_type.array_option or t == item_type.loop_option then
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local cv = item.current_value or ""
-        local rw = text.width(font.value, ">")
-        local lw = text.width(font.value, "<")
-        local vw = text.width(font.value, cv)
-        local rx = x + w - PAD - rw
-        local vx = rx - vw - 6
-        local lx = vx - lw - 6
-        text.draw(font.value, lx, ty,
-            CLR.txt_dim[1], CLR.txt_dim[2], CLR.txt_dim[3], hov and 200 or 140, "<")
-        text.draw(font.value, vx, ty,
-            CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, cv)
-        text.draw(font.value, rx, ty,
-            CLR.txt_dim[1], CLR.txt_dim[2], CLR.txt_dim[3], hov and 200 or 140, ">")
-        if hov and input.mouse_clicked(0) then
-            if mx > x + w * 0.5 then
-                menu.set_value_index(idx, (item.value_index + 1) % item.value_count)
-            else
-                local ni = item.value_index - 1
-                if ni < 0 then ni = item.value_count - 1 end
-                menu.set_value_index(idx, ni)
-            end
-        end
-
-    -- ── Color ──
-    elseif t == item_type.color then
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local sw2 = 24
-        local sh2 = ih - 8
-        local sx2 = x + w - PAD - sw2
-        local sy2 = y + 4
-        draw.rect(sx2, sy2, sx2 + sw2, sy2 + sh2, item.r, item.g, item.b, item.a, 2)
-        draw.rect_outline(sx2, sy2, sx2 + sw2, sy2 + sh2, 60, 60, 80, 200, 2)
-        if hov and input.mouse_clicked(0) then
-            if cpick_open and cpick_idx == idx then
-                cpick_open = false
-            else
-                cpick_open = true
-                cpick_idx = idx
-                cpick_vals = {item.r, item.g, item.b, item.a}
-                edit_active = false
-            end
-        end
-
-    -- ── Input types ──
-    elseif t == item_type.input_text or t == item_type.input_int or t == item_type.input_float then
-        local editing = edit_active and edit_idx == idx
-        text.draw(font.item, x + PAD, ty,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], hov and 255 or 200, item.name)
-        local bx2 = x + w * 0.45
-        local bw2 = w * 0.55 - PAD
-        local by2 = y + 3
-        local bh2 = ih - 6
-        local bdr = editing and CLR.accent or {50, 50, 72, 200}
-        draw.rect(bx2, by2, bx2 + bw2, by2 + bh2,
-            CLR.inp_bg[1], CLR.inp_bg[2], CLR.inp_bg[3], 255, 2)
-        draw.rect_outline(bx2, by2, bx2 + bw2, by2 + bh2,
-            bdr[1], bdr[2], bdr[3], bdr[4], 2)
-        local disp
-        if editing then
-            local blink = math.floor(ctx.time() * 2) % 2 == 0
-            disp = edit_buf .. (blink and "|" or "")
-        elseif t == item_type.input_float then
-            disp = string.format("%.2f", item.f_val)
-        elseif t == item_type.input_int then
-            disp = tostring(item.i_val)
+local function activate(item)
+    if item.name=="Reset Theme" and item.type==item_type.action then
+        reset_settings()
+        notify.push("Theme",THEME_NAME.." reset",1)
+        return
+    end
+    if item.type==item_type.array_toggle or item.type==item_type.loop_toggle then
+        menu.activate()
+    elseif CYCLIC[item.type] then
+        adjust(item,1)
+    elseif item.type==item_type.input_text or item.type==item_type.input_int or item.type==item_type.input_float
+        or item.type==item_type.search or item.type==item_type.slider or item.type==item_type.int_option then
+        edit_on=true
+        edit_idx=item._idx
+        edit_type=item.type
+        edit_frame=ctx.frame()
+        if item.type==item_type.input_int or item.type==item_type.int_option then
+            edit_buf=tostring(item.i_val or 0)
+        elseif item.type==item_type.input_float or item.type==item_type.slider then
+            edit_buf=string.format("%.2f",item.f_val or 0)
         else
-            disp = ""
+            edit_buf=item.text or ""
         end
-        draw.push_clip(bx2 + 2, by2, bx2 + bw2 - 2, by2 + bh2)
-        local dw = text.width(font.value, disp)
-        local dx = bx2 + bw2 - PAD - dw
-        if dx < bx2 + 3 then dx = bx2 + 3 end
-        local vth = text.height(font.value)
-        text.draw(font.value, dx, by2 + (bh2 - vth) * 0.5,
-            CLR.txt[1], CLR.txt[2], CLR.txt[3], 255, disp)
-        draw.pop_clip()
-        if hov and input.mouse_clicked(0) then
-            if editing then
-                apply_edit()
-            else
-                edit_active = true
-                edit_idx = idx
-                edit_type = t
-                if t == item_type.input_float then
-                    edit_buf = string.format("%.2f", item.f_val)
-                elseif t == item_type.input_int then
-                    edit_buf = tostring(item.i_val)
-                else
-                    edit_buf = ""
-                end
-                cpick_open = false
+    else
+        menu.activate()
+    end
+end
+
+local function process_edit()
+    if not edit_on then return end
+    local chars=input.get_chars()
+    if chars~="" then
+        for ch in chars:gmatch(".") do
+            local byte=string.byte(ch)
+            if edit_type==item_type.input_text or edit_type==item_type.search then
+                if #edit_buf<63 then edit_buf=edit_buf..ch end
+            elseif (byte>=48 and byte<=57) or (byte==45 and #edit_buf==0)
+                or (byte==46 and (edit_type==item_type.input_float or edit_type==item_type.slider)
+                    and not edit_buf:find("%.")) then
+                edit_buf=edit_buf..ch
             end
         end
-
-    -- ── Search ──
-    elseif t == item_type.search then
-        local editing = edit_active and edit_idx == idx
-        local bx2 = x + PAD
-        local bw2 = w - PAD * 2
-        local by2 = y + 3
-        local bh2 = ih - 6
-        local bdr = editing and CLR.accent or {50, 50, 72, 200}
-        draw.rect(bx2, by2, bx2 + bw2, by2 + bh2,
-            CLR.inp_bg[1], CLR.inp_bg[2], CLR.inp_bg[3], 255, 2)
-        draw.rect_outline(bx2, by2, bx2 + bw2, by2 + bh2,
-            bdr[1], bdr[2], bdr[3], bdr[4], 2)
-        -- search glyph on right
-        local glyph = "[/]"
-        local gw = text.width(font.value, glyph)
-        local vth = text.height(font.value)
-        local gc = editing and CLR.accent or CLR.txt_dim
-        text.draw(font.value, bx2 + bw2 - PAD - gw, by2 + (bh2 - vth) * 0.5,
-            gc[1], gc[2], gc[3], 200, glyph)
-        -- query text / placeholder
-        local disp
-        if editing then
-            local blink = math.floor(ctx.time() * 2) % 2 == 0
-            disp = edit_buf .. (blink and "|" or "")
-        elseif item.text and item.text ~= "" then
-            disp = item.text
+    end
+    if input.key_just_pressed(VK.BACK) and #edit_buf>0 then edit_buf=edit_buf:sub(1,-2) end
+    if input.key_just_pressed(VK.ESCAPE) then edit_on=false end
+    if input.key_just_pressed(VK.RETURN) and ctx.frame()~=edit_frame then
+        menu.set_selected(edit_idx)
+        if edit_type==item_type.input_int or edit_type==item_type.int_option then
+            local value=tonumber(edit_buf)
+            if value then menu.set_i_val(edit_idx,math.floor(value)) end
+        elseif edit_type==item_type.input_float or edit_type==item_type.slider then
+            local value=tonumber(edit_buf)
+            if value then menu.set_f_val(edit_idx,value) end
         else
-            disp = "Search..."
+            menu.set_input_buffer(edit_buf)
+            menu.confirm_input()
         end
-        local tc = (not editing and (not item.text or item.text == "")) and CLR.txt_dim or CLR.txt
-        draw.push_clip(bx2 + PAD, by2, bx2 + bw2 - PAD * 2 - gw - 4, by2 + bh2)
-        text.draw(font.value, bx2 + PAD, by2 + (bh2 - vth) * 0.5,
-            tc[1], tc[2], tc[3], 255, disp)
-        draw.pop_clip()
-        if hov and input.mouse_clicked(0) then
-            if editing then
-                apply_edit()
-            else
-                edit_active = true
-                edit_idx = idx
-                edit_type = t
-                edit_buf = item.text or ""
-                cpick_open = false
-            end
-        end
-    end
-
-    return ih + extra
-end
-
-local function item_draw_height(item,ih)
-    if not item then return 0 end
-    if item.type==item_type.slider or item.type==item_type.int_option then return ih+10 end
-    if item.on and (item.type==item_type.float_toggle or item.type==item_type.int_toggle) then return ih+14 end
-    return ih
-end
-
-local function build_sections(count,skip_subs,ih)
-    local sections={}
-    local current=nil
-    local function ensure_section()
-        if not current then
-            current={title=menu.page_name() or "Options",items={},height=34}
-            table.insert(sections,current)
-        end
-    end
-    for i=0,count-1 do
-        local item=menu.get_item(i)
-        if item and not (skip_subs and item.type==item_type.sub_menu) then
-            if item.is_header then
-                local name=(item.name or "Options"):gsub("^[%-%s]+",""):gsub("[%-%s]+$","")
-                current={title=name,items={},height=34}
-                table.insert(sections,current)
-            else
-                ensure_section()
-                table.insert(current.items,i)
-                current.height=current.height+item_draw_height(item,ih)
-            end
-        end
-    end
-    for _,section in ipairs(sections) do section.height=section.height+8 end
-    return sections
-end
-
-local function draw_cards(x,y,w,h,ih,count,skip_subs,clip_top,clip_bot)
-    local sections=build_sections(count,skip_subs,ih)
-    local col_w=(w-CARD_GAP)/2
-    local heights={0,0}
-    for _,section in ipairs(sections) do
-        local col=heights[1]<=heights[2] and 1 or 2
-        local cx=x+(col-1)*(col_w+CARD_GAP)
-        local cy=y+heights[col]
-        draw.rect(cx,cy,cx+col_w,cy+section.height,11,4,19,225,4)
-        draw.rect_outline(cx,cy,cx+col_w,cy+section.height,
-            CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],145,4,1)
-        draw.rect_gradient(cx,cy,cx+col_w,cy+3,
-            CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],230,
-            CLR.accent[1],CLR.accent[2],CLR.accent[3],230,
-            CLR.accent[1],CLR.accent[2],CLR.accent[3],230,
-            CLR.accent_d[1],CLR.accent_d[2],CLR.accent_d[3],230)
-        center_text(font.title,cx,cx+col_w,cy+7,section.title,
-            CLR.txt[1],CLR.txt[2],CLR.txt[3],255)
-        draw.line(cx+8,cy+33,cx+col_w-8,cy+33,CLR.div[1],CLR.div[2],CLR.div[3],150)
-        local iy=cy+35
-        for _,idx in ipairs(section.items) do
-            local used=draw_item(idx,cx+5,iy,col_w-10,ih,clip_top,clip_bot,false)
-            iy=iy+used
-        end
-        heights[col]=heights[col]+section.height+CARD_GAP
-    end
-    return math.max(heights[1],heights[2])+PAD*2
-end
-
--- ── Draw: Color Picker Popup ──
-local function draw_color_popup(wx, wy, ww, wh)
-    if not cpick_open then return end
-    local item = menu.get_item(cpick_idx)
-    if not item then cpick_open = false; return end
-
-    local PW, PH = 200, 130
-    local px = wx + ww - PW - 10
-    local py = wy + wh - PH - DESC_H - 10
-
-    draw.rect(px, py, px + PW, py + PH, 20, 20, 28, 250, 4)
-    draw.rect_outline(px, py, px + PW, py + PH,
-        CLR.accent[1], CLR.accent[2], CLR.accent[3], 180, 4)
-
-    local labels = {"R", "G", "B", "A"}
-    local ry = py + 8
-
-    for ci = 1, 4 do
-        text.draw(font.tiny, px + 6, ry + 4,
-            CLR.txt_dim[1], CLR.txt_dim[2], CLR.txt_dim[3], 255, labels[ci])
-        local bx = px + 18
-        local bw = PW - 18 - 38
-        local by = ry + (22 - SLIDER_H) * 0.5 + 2
-        draw.rect(bx, by, bx + bw, by + SLIDER_H,
-            CLR.sli_bg[1], CLR.sli_bg[2], CLR.sli_bg[3], 255, 2)
-        local tv = cpick_vals[ci] / 255
-        if tv > 0 then
-            draw.rect_gradient(bx, by, bx + tv * bw, by + SLIDER_H,
-                CLR.accent_d[1], CLR.accent_d[2], CLR.accent_d[3], 255,
-                CLR.accent[1],   CLR.accent[2],   CLR.accent[3],   255,
-                CLR.accent[1],   CLR.accent[2],   CLR.accent[3],   255,
-                CLR.accent_d[1], CLR.accent_d[2], CLR.accent_d[3], 255)
-        end
-        local vs = tostring(math.floor(cpick_vals[ci]))
-        local vw = text.width(font.tiny, vs)
-        text.draw(font.tiny, px + PW - vw - 6, ry + 4,
-            CLR.accent[1], CLR.accent[2], CLR.accent[3], 255, vs)
-
-        if input.mouse_clicked(0) and in_rect(bx, by - 4, bx + bw, by + SLIDER_H + 4) then
-            cpick_drag = ci
-        end
-        if cpick_drag == ci and input.mouse_down(0) then
-            local nmx = input.mouse_x()
-            local nt = clamp((nmx - bx) / bw, 0, 1)
-            cpick_vals[ci] = math.floor(nt * 255 + 0.5)
-        end
-
-        ry = ry + 22
-    end
-
-    if input.mouse_released(0) then cpick_drag = 0 end
-
-    if cpick_vals[1] ~= item.r or cpick_vals[2] ~= item.g
-       or cpick_vals[3] ~= item.b or cpick_vals[4] ~= item.a then
-        menu.set_item_color(cpick_idx,
-            cpick_vals[1], cpick_vals[2], cpick_vals[3], cpick_vals[4])
-    end
-
-    draw.rect(px + 6, ry, px + 30, ry + 16,
-        cpick_vals[1], cpick_vals[2], cpick_vals[3], cpick_vals[4], 2)
-    draw.rect_outline(px + 6, ry, px + 30, ry + 16, 60, 60, 80, 180, 2)
-
-    local db_x = px + PW - 44
-    local db_hov = in_rect(db_x, ry, db_x + 38, ry + 16)
-    local db_c = db_hov and CLR.btn_hov or CLR.btn_bg
-    draw.rect(db_x, ry, db_x + 38, ry + 16, db_c[1], db_c[2], db_c[3], 255, 3)
-    center_text(font.tiny, db_x, db_x + 38, ry + 3,
-        "Done", CLR.txt[1], CLR.txt[2], CLR.txt[3], 255)
-    if click_in(db_x, ry, db_x + 38, ry + 16) then cpick_open = false end
-
-    if input.mouse_clicked(0) and not in_rect(px, py, px + PW, py + PH) then
-        cpick_open = false
+        edit_on=false
     end
 end
-
--- ── Draw: Description Bar ──
-local function draw_desc(x, y, w, idx)
-    draw.rect(x, y, x + w, y + DESC_H,
-        CLR.desc_bg[1], CLR.desc_bg[2], CLR.desc_bg[3], 255)
-    draw.line(x, y, x + w, y, CLR.div[1], CLR.div[2], CLR.div[3], 100)
-    if idx<0 then idx=menu.selected_index() end
-    if idx >= 0 then
-        local item = menu.get_item(idx)
-        if item and item.desc and item.desc ~= "" then
-            local dth = text.height(font.desc)
-            draw.push_clip(x + PAD, y, x + w - PAD, y + DESC_H)
-            text.draw(font.desc, x + PAD, y + (DESC_H - dth) * 0.5,
-                CLR.txt_dim[1], CLR.txt_dim[2], CLR.txt_dim[3], 200, item.desc)
-            draw.pop_clip()
-        end
-    end
-end
-
--- ── Draw: Scrollbar ──
-local function draw_scrollbar(x, y, h, content_h)
-    if content_h <= h then return end
-    local ratio = h / content_h
-    local bar_h = math.max(ratio * h, 20)
-    local max_s = content_h - h
-    local t = max_s > 0 and (scroll / max_s) or 0
-    local bar_y = y + t * (h - bar_h)
-    draw.rect(x, bar_y, x + SCROLL_W, bar_y + bar_h,
-        CLR.accent[1], CLR.accent[2], CLR.accent[3], 120, 2)
-end
-
--- ══════════════════════════════════════════════════
--- MAIN DRAW
--- ══════════════════════════════════════════════════
 
 function draw_menu()
-    if title_font_downloaded then apply_title_font();title_font_downloaded=false end
+    if header_downloaded then load_header();header_downloaded=false end
+    if background_downloaded then load_background();background_downloaded=false end
+    if toggle_on_downloaded or toggle_off_downloaded or list_icon_downloaded then
+        load_ui_assets()
+        toggle_on_downloaded=false;toggle_off_downloaded=false;list_icon_downloaded=false
+    end
 
-    theme.set_body_bg(
-        math.max(CLR.bg[1] - 4, 0),
-        math.max(CLR.bg[2] - 4, 0),
-        math.max(CLR.bg[3] - 4, 0), 255)
+    local accent=setting("Stand Accent") or {r=111,g=35,b=224,a=255}
+    local background=setting("Stand Background") or {r=12,g=1,b=20,a=255}
+    theme.set_body_bg(background.r,background.g,background.b,background.a)
+    theme.set_menu_bg(background.r,background.g,background.b,background.a)
+    theme.set_accent_palette(accent.r,accent.g,accent.b,accent.a)
+    if not menu.is_visible() then menu.set_text_editing(false);return end
 
-    CLR = make_colors()
+    local width_setting=setting("Stand Width")
+    local row_setting=setting("Stand Rows")
+    local row_height_setting=setting("Stand Row Height")
+    local position_x_setting=setting("Stand Position X")
+    local position_y_setting=setting("Stand Position Y")
+    -- Stand's DirectX API uses a fixed 1920x1080 coordinate space. Nenyoo's
+    -- draw API uses logical coordinates before its UI-scale transform, so this
+    -- conversion preserves the source theme's physical size at every resolution.
+    local hud_sx=ctx.screen_w()/1920
+    local hud_sy=ctx.screen_h()/1080
+    apply_font_scale(hud_sy)
+    local source_width=clamp(width_setting and width_setting.f_val or 484,120,1200)
+    local width=clamp(source_width*hud_sx,1,math.max(1,ctx.screen_w()-16))
+    local requested_rows=math.floor(row_setting and row_setting.f_val or 12)
+    local row_h=clamp(row_height_setting and row_height_setting.f_val or 35,12,100)*hud_sy
+    local position_x=clamp(position_x_setting and position_x_setting.f_val or 783,0,1920)*hud_sx
+    local position_y=clamp(position_y_setting and position_y_setting.f_val or 102,0,1080)*hud_sy
+    local alpha=background.a or 255
+    local count=menu.item_count()
+    local sel=menu.selected_index()
+    local structural_header=HEADER_PATH~="" and LAYOUT_MODE=="standard"
+    local banner_h=structural_header and native_height(header_handle,width,76*hud_sy) or 0
+    local page_h=SUBHEADER_PATH~="" and native_height(subheader_handle,width,35*hud_sy)
+        or (TABS_ENABLED and 35*hud_sy or 0)
+    local desc_h=FOOTER_PATH~="" and native_height(footer_handle,width,31*hud_sy) or 46*hud_sy
+    local desired_rows=math.min(requested_rows,math.max(1,count))
+    local available_h=math.max(1,ctx.screen_h()-banner_h-page_h-desc_h-24)
+    if desired_rows>0 and row_h*desired_rows>available_h then
+        row_h=math.max(12*hud_sy,available_h/desired_rows)
+    end
+    local rows=math.min(requested_rows,math.max(1,math.floor(available_h/row_h)))
+    local start=math.floor(sel/rows)*rows
+    local visible=math.min(rows,math.max(0,count-start))
+    local body_h=visible*row_h
+    local height=banner_h+page_h+body_h+desc_h
+    local x=math.floor(clamp(position_x,8,math.max(8,ctx.screen_w()-width-8)))
+    local content_y=math.floor(clamp(position_y,banner_h+page_h+8,math.max(banner_h+page_h+8,ctx.screen_h()-body_h-desc_h-page_h-8)))
+    local page_y=TAB_BOTTOM and (content_y+body_h) or (content_y-page_h)
+    local y=TAB_BOTTOM and (content_y-banner_h) or (page_y-banner_h)
+    local drag_y=banner_h>0 and y or (page_h>0 and page_y or content_y)
+    local drag_h=banner_h>0 and banner_h or (page_h>0 and page_h or math.max(1,row_h))
+    local ox,oy=menu.drag_header(x,drag_y,width,drag_h)
+    x=x+ox;y=y+oy;content_y=content_y+oy;page_y=page_y+oy
+    menu.set_content_rect(x,content_y,width,visible*row_h)
 
-    if not menu.is_visible() then return end
-
-    init_pos()
-    if last_page=="" then
-        local current=menu.page_name()
-        local parent=menu.page_parent()
-        for i,cat in ipairs(cats) do
-            if current==cat.page or parent==cat.page then go_cat(i-1);break end
+    -- Stand's main-view background starts at the option list. Structural header/subheader/footer
+    -- images are separate ARGB layers; filling behind them destroys their intended transparency.
+    if LAYOUT_MODE=="cherax" then
+        local side_w=115*hud_sx
+        local panel_left=x-96*hud_sx
+        local logo_left=x-207*hud_sx
+        draw.rect(panel_left,content_y,x+width,content_y+body_h,13,1,21,255)
+        if header_handle and header_handle>0 then
+            draw.image(header_handle,logo_left,content_y,logo_left+side_w,content_y+body_h,1.0)
         end
-        if last_page=="" then go_cat(0) end
-    end
-    local W = math.min(sf("Width",900),ctx.screen_w()-24)
-    local H = math.min(sf("Height",620),ctx.screen_h()-24)
-    local ITEM_H = sf("Item Height",30)
-
-    -- Window drag handled by menu.drag_header() below
-
-    -- Slider drag
-    if drag_slider >= 0 then
-        if input.mouse_down(0) then
-            local nmx = input.mouse_x()
-            local t = clamp((nmx - drag_sl_x) / drag_sl_w, 0, 1)
-            local nv = drag_sl_min + t * (drag_sl_max - drag_sl_min)
-            if drag_sl_int then
-                menu.set_i_val(drag_slider, math.floor(nv + 0.5))
-            else
-                menu.set_f_val(drag_slider, nv)
-            end
-        else
-            drag_slider = -1
-        end
-    end
-
-    local x, y = win_x, win_y
-
-    -- Header drag-to-move: pass natural origin, add returned offset
-    local _dox, _doy = menu.drag_header(x, y, W, HDR_H)
-    x = x + _dox
-    y = y + _doy
-
-    local depth = get_depth()
-
-    -- Sync sub_tab_sel if user went back via keyboard
-    if depth == 0 and sub_tab_sel ~= -1 then
-        sub_tab_sel = -1
-    end
-
-    -- Window and neon edge glow
-    for glow=4,1,-1 do
-        draw.rect_outline(x-glow*2,y-glow*2,x+W+glow*2,y+H+glow*2,
-            CLR.accent[1],CLR.accent[2],CLR.accent[3],18+(4-glow)*11,7,2)
-    end
-    draw.rect(x,y,x+W,y+H,CLR.bg[1],CLR.bg[2],CLR.bg[3],CLR.bg[4],6)
-    draw.rect_outline(x,y,x+W,y+H,CLR.accent[1],CLR.accent[2],CLR.accent[3],210,6,1)
-
-    draw_header(x, y, W)
-    local main_x=x+SIDE_W
-    local main_w=W-SIDE_W
-
-    -- Sub-tabs or breadcrumb
-    local bar_y = y + HDR_H
-    local extra_h = 0
-    if depth >= 2 then
-        extra_h = draw_breadcrumb(main_x,bar_y,main_w)
+        draw.rect(logo_left,content_y-25*hud_sy,logo_left+side_w,content_y,112,35,226,255)
     else
-        extra_h = draw_sub_tabs(main_x,bar_y,main_w,depth)
+        draw.rect(x,content_y,x+width,content_y+body_h,background.r,background.g,background.b,alpha)
     end
-    if extra_h==0 then
-        extra_h=STAB_H
-        draw.rect(main_x,bar_y,main_x+main_w,bar_y+extra_h,
-            CLR.stab_bg[1],CLR.stab_bg[2],CLR.stab_bg[3],245)
-        text.draw(font.small,main_x+PAD,bar_y+(extra_h-text.height(font.small))*0.5,
-            CLR.accent[1],CLR.accent[2],CLR.accent[3],255,(menu.page_name() or "Options"):upper())
-        draw.line(main_x,bar_y+extra_h-1,main_x+main_w,bar_y+extra_h-1,
-            CLR.div[1],CLR.div[2],CLR.div[3],140)
+    if LAYOUT_MODE~="cherax" and background_handle and background_handle>0 then
+        draw.push_clip(x,content_y,x+width,content_y+body_h)
+        draw.image(background_handle,x,content_y,x+width,content_y+body_h,0.78)
+        draw.pop_clip()
     end
-
-    -- Content area
-    local cy = bar_y + extra_h
-    local ch=H-HDR_H-extra_h-DESC_H
-    local count = menu.item_count()
-
-    hover_idx = -1
-
-    -- On General tab (depth 0), skip sub_menu items (they're tabs)
-    local skip_subs = (depth == 0 and #sub_tabs > 0)
-
-    menu.set_content_rect(main_x,cy,main_w,ch)
-    draw.push_clip(main_x,cy,main_x+main_w-SCROLL_W-3,cy+ch)
-
-    local cards_x=main_x+PAD
-    local cards_w=main_w-PAD*2-SCROLL_W-3
-    local total_h=draw_cards(cards_x,cy+PAD-scroll,cards_w,ch,ITEM_H,count,skip_subs,cy,cy+ch)
-
-    draw.pop_clip()
-
-    draw_scrollbar(x+W-SCROLL_W-2,cy,ch,total_h)
-
-    -- Scroll wheel
-    if in_rect(main_x,cy,x+W,cy+ch) and drag_slider<0 then
-        local wh = input.mouse_wheel()
-        if wh ~= 0 then
-            scroll_tgt = scroll_tgt - wh * ITEM_H * 2
-            if scroll_tgt < 0 then scroll_tgt = 0 end
-            local ms = total_h - ch
-            if ms < 0 then ms = 0 end
-            if scroll_tgt > ms then scroll_tgt = ms end
+    if structural_header and header_handle and header_handle>0 then
+        draw.push_clip(x,y,x+width,y+banner_h)
+        draw.image(header_handle,x,y,x+width,y+banner_h,1.0)
+        draw.pop_clip()
+        if header_overlay_handle and header_overlay_handle>0 then
+            draw.image(header_overlay_handle,x,y,x+width,y+banner_h,1.0)
+        end
+    elseif LAYOUT_MODE=="standard" then
+        draw.rect_gradient(x,y,x+width,y+banner_h,
+            accent.r,accent.g,accent.b,240,
+            math.floor(accent.r*.45),math.floor(accent.g*.45),math.floor(accent.b*.45),240,
+            math.floor(accent.r*.30),math.floor(accent.g*.30),math.floor(accent.b*.30),240,
+            accent.r,accent.g,accent.b,240)
+    end
+    if 0>0 and 0>0 then
+        draw.rect_outline(x,content_y,x+width,content_y+body_h,0,0,0,0,0,0)
+    end
+    if LAYOUT_MODE=="standard" and not (header_handle and header_handle>0) then
+        local badge_w=0
+        if badge_handle and badge_handle>0 then
+            local iw,ih=draw.image_size(badge_handle)
+            if iw and ih and iw>0 and ih>0 then
+                local badge_h=math.min(banner_h-10,64)
+                badge_w=badge_h*iw/ih
+                local badge_x=BADGE_IS_LOGO and (x+(width-badge_w)*0.5) or (x+10)
+                draw.image(badge_handle,badge_x,y+(banner_h-badge_h)*0.5,badge_x+badge_w,y+(banner_h+badge_h)*0.5,1.0)
+            end
+        end
+        if not BADGE_IS_LOGO then
+            local title_x=badge_w>0 and (x+20+badge_w) or (x+(width-text.width(font.title,THEME_NAME))*0.5)
+            text.draw_outlined(font.title,title_x,y+(banner_h-text.height(font.title))*0.5,
+                255,255,255,255,
+                0,0,0,180,1.0,THEME_NAME)
         end
     end
 
-    scroll = lerp(scroll, scroll_tgt, clamp(ctx.delta() * 14, 0, 1))
+    local page=menu.page_name() or "Home"
+    local page_name=page=="Home" and "Main Menu" or page
+    if page_h>0 then
+        if subheader_handle and subheader_handle>0 then
+            draw.image(subheader_handle,x,page_y,x+width,page_y+page_h,1.0)
+        else
+            draw.rect(x,page_y,x+width,page_y+page_h,
+                math.floor(background.r*.55),math.floor(background.g*.55),math.floor(background.b*.55),math.max(alpha,220))
+        end
+        if TABS_ENABLED then
+            text.draw(font.small,x+10,page_y+(page_h-text.height(font.small))*0.5,
+                55,5,255,255,page_name)
+            local counter=count>0 and tostring(sel+1).." / "..tostring(count) or "0 / 0"
+            text.draw(font.small,x+width-10-text.width(font.small,counter),
+                page_y+(page_h-text.height(font.small))*0.5,55,5,255,255,counter)
+        end
+    end
 
-    draw_desc(main_x,y+H-DESC_H,main_w,hover_idx)
+    for row=0,visible-1 do
+        local idx=start+row
+        local yy=content_y+row*row_h
+        local item=menu.get_item(idx)
+        if item then
+            item._idx=idx
+            local active=idx==sel
+            local hovered=hit(x,yy,x+width,yy+row_h)
+            if active then draw.rect(x,yy,x+width,yy+row_h,accent.r,accent.g,accent.b,accent.a) end
+            if hovered and not active then draw.rect(x,yy,x+width,yy+row_h,accent.r,accent.g,accent.b,45) end
+            if 0>0 then
+                draw.rect(x,yy+row_h-1,x+width,yy+row_h,0,0,0,math.min(0,80))
+            end
 
-    draw_cats(x,y+HDR_H,H-HDR_H)
+            if item.is_header then
+                text.draw(font.small,x+10,yy+(row_h-text.height(font.small))*0.5,
+                    active and 255 or accent.r,active and 255 or accent.g,active and 255 or accent.b,255,
+                    (item.name or ""):gsub("^[%-%s]+",""):gsub("[%-%s]+$",""))
+            else
+                local name_icon=ui_asset(item.name or "")
+                local text_x=x+10
+                if name_icon and name_icon>0 then
+                    local icon_size=math.min(18,row_h-7)
+                    draw.image(name_icon,text_x,yy+(row_h-icon_size)*0.5,text_x+icon_size,yy+(row_h+icon_size)*0.5,1.0)
+                    text_x=text_x+icon_size+7
+                end
+                text.draw_ellipsis(font.item,text_x,yy+(row_h-text.height(font.item))*0.5,
+                    active and 255 or 55,active and 255 or 5,active and 255 or 255,active and 255 or 255,
+                    item.name or "",width*0.70)
 
-    draw_color_popup(x, y, W, H)
+                local value=""
+                local toggle_type=item.type==item_type.toggle or item.type==item_type.float_toggle
+                    or item.type==item_type.int_toggle or item.type==item_type.array_toggle
+                    or item.type==item_type.loop_toggle
+                local action_mark=item.type==item_type.sub_menu or item.type==item_type.action
+                if item.type==item_type.selected_tick then value=""
+                elseif not toggle_type and (NUMERIC[item.type] or CYCLIC[item.type]
+                    or item.type==item_type.input_text or item.type==item_type.input_int
+                    or item.type==item_type.input_float or item.type==item_type.search) then
+                    value=item_value(item)
+                elseif toggle_type and item.type~=item_type.toggle then
+                    value=item_value(item)
+                end
+                if edit_on and edit_idx==idx then value=edit_buf..((math.floor(ctx.time()*2)%2==0) and "|" or "") end
 
-    process_edit_keys()
+                local indicator_x=x+width-14
+                if toggle_type then
+                    local toggle_handle=indicator_asset(item,toggle_type,action_mark)
+                    if not toggle_handle or toggle_handle<=0 then toggle_handle=item.on and toggle_on_handle or toggle_off_handle end
+                    if toggle_handle and toggle_handle>0 then
+                        local icon_size=math.min(20,row_h-6)
+                        draw.image(toggle_handle,indicator_x-icon_size,yy+(row_h-icon_size)*0.5,
+                            indicator_x,yy+(row_h+icon_size)*0.5,1.0)
+                    else
+                        draw.rect_outline(indicator_x-5,yy+row_h*0.5-5,indicator_x+5,yy+row_h*0.5+5,
+                            active and 255 or 55,active and 255 or 5,active and 255 or 255,210,1,1)
+                        if item.on then draw.rect(indicator_x-3,yy+row_h*0.5-3,indicator_x+3,yy+row_h*0.5+3,
+                            active and 255 or accent.r,active and 255 or accent.g,active and 255 or accent.b,255,1) end
+                    end
+                elseif item.type==item_type.selected_tick then
+                    local selected_handle=indicator_asset(item,false,false)
+                    if selected_handle and selected_handle>0 then
+                        local icon_size=math.min(18,row_h-7)
+                        draw.image(selected_handle,indicator_x-icon_size,yy+(row_h-icon_size)*0.5,
+                            indicator_x,yy+(row_h+icon_size)*0.5,1.0)
+                    else
+                        draw.circle(indicator_x,yy+row_h*0.5,5,accent.r,accent.g,accent.b,255)
+                    end
+                elseif action_mark then
+                    local action_handle=indicator_asset(item,false,action_mark)
+                    if not action_handle or action_handle<=0 then action_handle=list_icon_handle end
+                    if action_handle and action_handle>0 then
+                        local icon_size=math.min(18,row_h-7)
+                        draw.image(action_handle,x+width-8-icon_size,yy+(row_h-icon_size)*0.5,
+                            x+width-8,yy+(row_h+icon_size)*0.5,1.0)
+                    else
+                        local mark=">"
+                        text.draw(font.small,x+width-10-text.width(font.small,mark),yy+(row_h-text.height(font.small))*0.5,
+                            active and 255 or 55,active and 255 or 5,active and 255 or 255,255,mark)
+                    end
+                end
+                if value~="" then
+                    local right=toggle_type and indicator_x-12 or x+width-10
+                    text.draw(font.value,right-text.width(font.value,value),yy+(row_h-text.height(font.value))*0.5,
+                        active and 255 or 55,active and 255 or 5,active and 255 or 255,255,value)
+                end
+            end
+
+            if hovered and input.mouse_clicked(0) and not menu.overlay_active() then
+                menu.set_selected(idx)
+                activate(item)
+            end
+            if hovered and input.mouse_clicked(1) then
+                menu.set_selected(idx)
+                adjust(item,-1)
+            end
+        end
+    end
+
+    local desc_y=content_y+body_h+(TAB_BOTTOM and page_h or 0)
+    if footer_handle and footer_handle>0 then
+        draw.image(footer_handle,x,desc_y,x+width,desc_y+desc_h,1.0)
+    else
+        draw.rect(x,desc_y,x+width,desc_y+desc_h,
+            math.floor(background.r*.60),math.floor(background.g*.60),math.floor(background.b*.60),math.max(alpha,210))
+        draw.rect(x,desc_y,x+width,desc_y+1,accent.r,accent.g,accent.b,125)
+        local selected_item=count>0 and menu.get_item(sel) or nil
+        local description=(selected_item and selected_item.desc and selected_item.desc~="") and selected_item.desc
+            or (selected_item and ("Select "..(selected_item.name or "this option")..".") or "No options available.")
+        draw.push_clip(x+9,desc_y+4,x+width-9,desc_y+desc_h-4)
+        text.draw(font.desc,x+9,desc_y+7,55,5,255,255,description,width-18)
+        draw.pop_clip()
+    end
+
+    if count>rows then
+        local track_y=content_y
+        local track_h=visible*row_h
+        local thumb_h=math.max(18,track_h*(rows/count))
+        local max_start=math.max(1,count-rows)
+        local thumb_y=track_y+(track_h-thumb_h)*(start/max_start)
+        draw.rect(x+width-3,thumb_y,x+width,thumb_y+thumb_h,accent.r,accent.g,accent.b,190)
+    end
+
+    process_edit()
+    menu.set_text_editing(edit_on)
+    local signature=serialize_settings()
+    if signature~=last_settings then last_settings=signature;save_pending=true;save_at=ctx.time() end
+    if save_pending and ctx.time()-save_at>0.4 then
+        file.write(SETTINGS_FILE,last_settings)
+        save_pending=false
+    end
 end
 
--- ══════════════════════════════════════════════════
--- INPUT
--- ══════════════════════════════════════════════════
-
 function handle_input()
-    if input.key_just_pressed(VK.INSERT) then
-        menu.set_visible(not menu.is_visible())
-        if not menu.is_visible() then
-            edit_active = false
-            cpick_open = false
-        end
-    end
-
-    if edit_active then return end
-
-    if input.key_just_pressed(VK.ESCAPE) then
-        if cpick_open then
-            cpick_open = false
-        elseif menu.page_parent() ~= "" then
-            menu.go_back()
-            scroll_tgt = 0
-            scroll = 0
-        end
-    end
+    if not menu.is_visible() or edit_on then return end
+    if input.key_pressed(VK.DOWN) then menu.move_selection(1) end
+    if input.key_pressed(VK.UP) then menu.move_selection(-1) end
+    local item=menu.get_item(menu.selected_index())
+    if item then item._idx=menu.selected_index() end
+    if input.key_pressed(VK.RIGHT) and item and adjust(item,1) then
+    elseif input.key_just_pressed(VK.RIGHT) and item then activate(item) end
+    if input.key_pressed(VK.LEFT) and item and adjust(item,-1) then
+    elseif input.key_just_pressed(VK.LEFT) then menu.go_back() end
+    if input.key_just_pressed(VK.RETURN) and item then activate(item) end
+    if input.key_just_pressed(VK.BACK) or input.key_just_pressed(VK.ESCAPE) then menu.go_back() end
 end
