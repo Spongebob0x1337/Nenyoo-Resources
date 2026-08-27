@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "scripts": [
+    {
+      "id": "Chaos Playground",
+      "name": "Chaos Playground",
+      "entry": "Chaos Playground.lua",
+      "description": "A sandbox of goofy toys: super jump, explosive melee, rainbow trails and more.",
+      "preview": "preview.png",
+      "bytes": 714928,
+      "hash": "1a408835",
+      "files": [
+        {
+          "path": "Chaos Playground.lua",
+          "bytes": 5803,
+          "hash": "af963d21b2bac573"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 709125,
+          "hash": "9aae70a27abe49dd"
+        }
+      ]
+    },
+    {
+      "id": "Companion Pet",
+      "name": "Companion Pet",
+      "entry": "Companion Pet.lua",
+      "description": "Bring a loyal pet along: pick a breed, give commands, take it on adventures.",
+      "preview": "preview.png",
+      "bytes": 771647,
+      "hash": "63688be6",
+      "files": [
+        {
+          "path": "Companion Pet.lua",
+          "bytes": 22140,
+          "hash": "b4e3ac25df040710"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 749507,
+          "hash": "4d949d9efcc8192f"
+        }
+      ]
+    },
+    {
+      "id": "Human Cannonball",
+      "name": "Human Cannonball",
+      "entry": "Human Cannonball.lua",
+      "description": "Set a firing line, dial in power and angle, and launch yourself at a distant target ring.",
+      "preview": "preview.png",
+      "bytes": 282274,
+      "hash": "f754ccf5",
+      "files": [
+        {
+          "path": "Human Cannonball.lua",
+          "bytes": 17220,
+          "hash": "24b82ad5a33e4abb"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 265054,
+          "hash": "b35f1c619d3f4691"
+        }
+      ]
+    },
+    {
+      "id": "Hydrant Havoc",
+      "name": "Hydrant Havoc",
+      "entry": "Hydrant Havoc.lua",
+      "description": "Spawn water hydrants beneath nearby peds, players and vehicles for instant chaos.",
+      "preview": "preview.png",
+      "bytes": 786653,
+      "hash": "f8ca8859",
+      "files": [
+        {
+          "path": "Hydrant Havoc.lua",
+          "bytes": 7144,
+          "hash": "7e71060aa0ab39b2"
+        },
+        {
+          "path": "preview.png",
+          "bytes": 779509,
+          "hash": "f279851a7c733f82"
+        }
+      ]
+    }
+  ]
+}
